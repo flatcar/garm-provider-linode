@@ -8,7 +8,10 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type Config struct{}
+type Config struct {
+	// Token used to authenticate the Linode HTTP client.
+	Token string `toml:"token"`
+}
 
 // New returns a new config
 func New(cfgFile string) (*Config, error) {
@@ -25,5 +28,9 @@ func New(cfgFile string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	if c.Token == "" {
+		return fmt.Errorf("token needs to be set")
+	}
+
 	return nil
 }
