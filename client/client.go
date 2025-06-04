@@ -41,4 +41,21 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 	return &LinodeClient{Client: &client}, nil
 }
 
+func (c *LinodeClient) ListInstances(poolID string) ([]linodego.Instance, error) {
+	f := map[string]string{
+		"tags": poolID,
+	}
+	filter, err := json.Marshal(f)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling filter: %w", err)
+	}
+
+	instances, err := c.Client.ListInstances(context.Background(), &linodego.ListOptions{
+		Filter: string(filter),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("getting instances list: %w", err)
+	}
+
+	return instances, nil
 }

@@ -5,6 +5,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/flatcar/garm-provider-linode/client"
 	"github.com/flatcar/garm-provider-linode/config"
@@ -58,7 +59,20 @@ func (p *linodeProvider) GetInstance(ctx context.Context, instance string) (para
 
 // ListInstances will list all instances for a provider.
 func (p *linodeProvider) ListInstances(ctx context.Context, poolID string) ([]params.ProviderInstance, error) {
-	return nil, nil
+	instances, err := p.cli.ListInstances(poolID)
+	if err != nil {
+		return nil, fmt.Errorf("listing instances: %w", err)
+	}
+
+	res := make([]params.ProviderInstance, len(instances))
+	for i, instance := range instances {
+		res[i] = params.ProviderInstance{
+			ProviderID: strconv.Itoa(instance.ID),
+			Name:       instance.Label,
+		}
+	}
+
+	return res, nil
 }
 
 // RemoveAllInstances will remove all instances created by this provider.
