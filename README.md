@@ -11,7 +11,29 @@
 
 
 
-# \<project-name>
+# Garm External Provider For Linode
+
+About [Garm](https://github.com/cloudbase/garm):
+> GARM enables you to create and automatically maintain pools of self-hosted runners in both Github and Gitea with auto-scaling that can be used inside your workflow runs.
+
+The idea, the implementation and the maintenance of Garm is mainly done by Cloudbase folks. This repository host the [Linode](https://cloud.linode.com/) external provider to create Linux runners on top of Linode virtual machines with Garm.
+
+## Build
+
+Clone the repo:
+
+```bash
+git clone https://github.com/flatcar/garm-provider-linode
+```
+
+Build the binary:
+
+```bash
+cd garm-provider-linode
+make
+```
+
+Copy the binary on the same system where ```garm``` is running, and [point to it in the config](https://github.com/cloudbase/garm/blob/main/doc/providers.md#the-external-provider).
 
 ### A Flatcar Container Linux project
 
