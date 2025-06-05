@@ -43,7 +43,7 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 
 func (c *LinodeClient) ListInstances(poolID string) ([]linodego.Instance, error) {
 	f := map[string]string{
-		"tags": poolID,
+		"tags": fmt.Sprintf("pool=%s", poolID),
 	}
 	filter, err := json.Marshal(f)
 	if err != nil {
