@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	// Region where to deploy things
+	Region string `toml:"region,omitempty"`
 	// Token used to authenticate the Linode HTTP client.
 	Token string `toml:"token"`
 }
@@ -22,6 +24,10 @@ func New(cfgFile string) (*Config, error) {
 
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("validating config: %w", err)
+	}
+
+	if config.Region == "" {
+		config.Region = "us-ord"
 	}
 
 	return &config, nil
