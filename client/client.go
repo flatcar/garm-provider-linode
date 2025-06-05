@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/oauth2"
 
@@ -54,8 +55,22 @@ func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]lino
 		Filter: string(filter),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting instances list: %w", err)
+		return nil, fmt.Errorf("getting instances list from Linode API: %w", err)
 	}
 
 	return instances, nil
+}
+
+func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
+	i, err := strconv.Atoi(ID)
+	if err != nil {
+		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
+	}
+
+	instance, err := c.Client.GetInstance(ctx, i)
+	if err != nil {
+		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
+	}
+
+	return instance, nil
 }

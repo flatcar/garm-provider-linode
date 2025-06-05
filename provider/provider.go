@@ -69,8 +69,37 @@ func (p *linodeProvider) DeleteInstance(ctx context.Context, instance string) er
 }
 
 // GetInstance will return details about one instance.
-func (p *linodeProvider) GetInstance(ctx context.Context, instance string) (params.ProviderInstance, error) {
-	return params.ProviderInstance{}, nil
+func (p *linodeProvider) GetInstance(ctx context.Context, ID string) (params.ProviderInstance, error) {
+	instance, err := p.cli.GetInstance(ctx, ID)
+	if err != nil {
+		return params.ProviderInstance{}, fmt.Errorf("getting instance: %w", err)
+	}
+
+	// Extra safety net if the instance status does not exist.
+	instanceStatus := params.InstanceStatusUnknown
+	if s, ok := status[instance.Status]; ok {
+		instanceStatus = s
+	}
+
+	inst := params.ProviderInstance{
+		ProviderID: strconv.Itoa(instance.ID),
+		Name:       instance.Label,
+		Status:     instanceStatus,
+		// TODO: Add OSType, OSName, OSVersion and OSArch.
+	}
+
+	// Best effort to get the public IP.
+	ipv4s := instance.IPv4
+	if len(ipv4s) > 0 {
+		inst.Addresses = []params.Address{
+			{
+				Type:    params.PublicAddress,
+				Address: ipv4s[0].String(),
+			},
+		}
+	}
+
+	return inst, nil
 }
 
 // ListInstances will list all instances for a provider.
