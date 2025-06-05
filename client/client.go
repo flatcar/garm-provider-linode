@@ -18,6 +18,7 @@ import (
 
 type LinodeClient struct {
 	Client *linodego.Client
+	config *config.Config
 }
 
 // New returns a new Linode client.
@@ -39,7 +40,11 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 
 	client := linodego.NewClient(oauth2Client)
 
-	return &LinodeClient{Client: &client}, nil
+	return &LinodeClient{
+		Client: &client,
+		config: cfg,
+	}, nil
+}
 }
 
 func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
