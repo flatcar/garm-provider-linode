@@ -35,6 +35,43 @@ make
 
 Copy the binary on the same system where ```garm``` is running, and [point to it in the config](https://github.com/cloudbase/garm/blob/main/doc/providers.md#the-external-provider).
 
+## Usage example
+
+`garm-provider-linode` configuration:
+```toml
+# /etc/garm/providers.d/garm-provider-linode.toml
+# token is generated from Linode with the following permissions:
+# - Linodes r/w
+token = "foo..."
+# region where to deploy things (optional, default: us-ord)
+region = "us-ord"
+```
+
+Garm configuration to use the `garm-provider-linode` binary in `/etc/garm/updates`:
+```
+# /etc/garm/config.toml
+[[provider]]
+  name = "akamai-linode-amd64"
+  provider_type = "external"
+  description = "Akamai Linode (amd64)"
+  [provider.external]
+    provider_executable = "/etc/garm/updates/garm-provider-linode"
+    config_file = "/etc/garm/providers.d/garm-provider-linode.toml"
+```
+
+Add the pool:
+```
+$ garm-cli pool add \
+  --org="${ORG}" \
+  --flavor g6-standard-2 \
+  --image=linode/ubuntu24.04 \
+  --provider-name=akamai-linode-amd64 \
+  --tags=test,linode \
+  --enabled \
+  --min-idle-runners 1 \
+  --max-runners 2
+```
+
 ### A Flatcar Container Linux project
 
 Flatcar Container Linux is a fully open source, minimal-footprint, secure by default and always up-to-date Linux distribution for running containers at scale.
