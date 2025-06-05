@@ -42,6 +42,33 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 	return &LinodeClient{Client: &client}, nil
 }
 
+func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
+	i, err := strconv.Atoi(ID)
+	if err != nil {
+		return fmt.Errorf("converting ID string to ID int: %w", err)
+	}
+
+	if err := c.Client.DeleteInstance(ctx, i); err != nil {
+		return fmt.Errorf("deleting instance from Linode API: %w", err)
+	}
+
+	return nil
+}
+
+func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
+	i, err := strconv.Atoi(ID)
+	if err != nil {
+		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
+	}
+
+	instance, err := c.Client.GetInstance(ctx, i)
+	if err != nil {
+		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
+	}
+
+	return instance, nil
+}
+
 func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {
 	f := map[string]string{
 		"tags": fmt.Sprintf("pool=%s", poolID),
@@ -59,18 +86,4 @@ func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]lino
 	}
 
 	return instances, nil
-}
-
-func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
-	i, err := strconv.Atoi(ID)
-	if err != nil {
-		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
-	}
-
-	instance, err := c.Client.GetInstance(ctx, i)
-	if err != nil {
-		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
-	}
-
-	return instance, nil
 }

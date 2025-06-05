@@ -48,7 +48,11 @@ func (p *linodeProvider) CreateInstance(ctx context.Context, bootstrapParams par
 }
 
 // Delete instance will delete the instance in a provider.
-func (p *linodeProvider) DeleteInstance(ctx context.Context, instance string) error {
+func (p *linodeProvider) DeleteInstance(ctx context.Context, ID string) error {
+	if err := p.cli.DeleteInstance(ctx, ID); err != nil {
+		return fmt.Errorf("deleting instance: %w", err)
+	}
+
 	return nil
 }
 
@@ -62,6 +66,11 @@ func (p *linodeProvider) GetInstance(ctx context.Context, ID string) (params.Pro
 	inst := instanceLinodeToGarm(instance)
 
 	return inst, nil
+}
+
+// GetVersion returns the version of the provider.
+func (p *linodeProvider) GetVersion(ctx context.Context) string {
+	return Version
 }
 
 // ListInstances will list all instances for a provider.
@@ -94,9 +103,4 @@ func (p *linodeProvider) Stop(ctx context.Context, instance string, force bool) 
 // Start boots up an instance.
 func (p *linodeProvider) Start(ctx context.Context, instance string) error {
 	return nil
-}
-
-// GetVersion returns the version of the provider.
-func (p *linodeProvider) GetVersion(ctx context.Context) string {
-	return Version
 }
