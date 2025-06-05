@@ -29,6 +29,10 @@ var (
 // instanceLinodeToGarm takes care of converting a Linode instance
 // to a Garm instance.
 func instanceLinodeToGarm(in *linodego.Instance) params.ProviderInstance {
+	if in == nil {
+		return params.ProviderInstance{}
+	}
+
 	// Extra safety net if the instance status does not exist.
 	instanceStatus := params.InstanceStatusUnknown
 	if s, ok := status[in.Status]; ok {
