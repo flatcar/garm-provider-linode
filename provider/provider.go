@@ -114,11 +114,13 @@ func (p *linodeProvider) ListInstances(ctx context.Context, poolID string) ([]pa
 
 // RemoveAllInstances will remove all instances created by this provider.
 func (p *linodeProvider) RemoveAllInstances(ctx context.Context) error {
+	// TODO: Implements p.cli.RemoveAllInstances(ctx).
 	return nil
 }
 
 // Stop shuts down the instance.
 func (p *linodeProvider) Stop(ctx context.Context, instance string, force bool) error {
+	// TODO: Implements p.cli.StopInstance(ctx, instance, force).
 	return nil
 }
 
