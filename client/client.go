@@ -57,6 +57,13 @@ func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams param
 		return nil, fmt.Errorf("getting tools: %w", err)
 	}
 
+	extraSpecs, err := extraSpecsFromBootstrapData(bootstrapParams)
+	if err != nil {
+		return nil, fmt.Errorf("getting extra specs: %w", err)
+	}
+
+	bootstrapParams.UserDataOptions.ExtraPackages = extraSpecs.ExtraPackages
+
 	userData, err := cloudconfig.GetCloudConfig(bootstrapParams, tools, bootstrapParams.Name)
 	if err != nil {
 		return nil, fmt.Errorf("generating userdata: %w", err)
