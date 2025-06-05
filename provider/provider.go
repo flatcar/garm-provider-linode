@@ -5,11 +5,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/flatcar/garm-provider-linode/client"
 	"github.com/flatcar/garm-provider-linode/config"
-	"github.com/linode/linodego"
 
 	execution "github.com/cloudbase/garm-provider-common/execution/v0.1.0"
 	"github.com/cloudbase/garm-provider-common/params"
@@ -18,20 +16,6 @@ import (
 var (
 	_       execution.ExternalProvider = &linodeProvider{}
 	Version                            = "v0.0.0-unknown"
-	status                             = map[linodego.InstanceStatus]params.InstanceStatus{
-		linodego.InstanceRunning:      params.InstanceRunning,
-		linodego.InstanceOffline:      params.InstanceStopped,
-		linodego.InstanceDeleting:     params.InstanceDeleting,
-		linodego.InstanceProvisioning: params.InstancePendingCreate,
-		linodego.InstanceBooting:      params.InstanceCreating,
-		linodego.InstanceShuttingDown: params.InstanceStopped,
-		linodego.InstanceRebooting:    params.InstanceStatusUnknown,
-		linodego.InstanceMigrating:    params.InstanceStatusUnknown,
-		linodego.InstanceRebuilding:   params.InstanceStatusUnknown,
-		linodego.InstanceCloning:      params.InstanceStatusUnknown,
-		linodego.InstanceRestoring:    params.InstanceStatusUnknown,
-		linodego.InstanceResizing:     params.InstanceStatusUnknown,
-	}
 )
 
 type linodeProvider struct {
@@ -75,29 +59,7 @@ func (p *linodeProvider) GetInstance(ctx context.Context, ID string) (params.Pro
 		return params.ProviderInstance{}, fmt.Errorf("getting instance: %w", err)
 	}
 
-	// Extra safety net if the instance status does not exist.
-	instanceStatus := params.InstanceStatusUnknown
-	if s, ok := status[instance.Status]; ok {
-		instanceStatus = s
-	}
-
-	inst := params.ProviderInstance{
-		ProviderID: strconv.Itoa(instance.ID),
-		Name:       instance.Label,
-		Status:     instanceStatus,
-		// TODO: Add OSType, OSName, OSVersion and OSArch.
-	}
-
-	// Best effort to get the public IP.
-	ipv4s := instance.IPv4
-	if len(ipv4s) > 0 {
-		inst.Addresses = []params.Address{
-			{
-				Type:    params.PublicAddress,
-				Address: ipv4s[0].String(),
-			},
-		}
-	}
+	inst := instanceLinodeToGarm(instance)
 
 	return inst, nil
 }
@@ -111,31 +73,7 @@ func (p *linodeProvider) ListInstances(ctx context.Context, poolID string) ([]pa
 
 	res := make([]params.ProviderInstance, len(instances))
 	for i, instance := range instances {
-		// Extra safety net if the instance status does not exist.
-		instanceStatus := params.InstanceStatusUnknown
-		if s, ok := status[instance.Status]; ok {
-			instanceStatus = s
-		}
-
-		inst := params.ProviderInstance{
-			ProviderID: strconv.Itoa(instance.ID),
-			Name:       instance.Label,
-			Status:     instanceStatus,
-			// TODO: Add OSType, OSName, OSVersion and OSArch.
-		}
-
-		// Best effort to get the public IP.
-		ipv4s := instance.IPv4
-		if len(ipv4s) > 0 {
-			inst.Addresses = []params.Address{
-				{
-					Type:    params.PublicAddress,
-					Address: ipv4s[0].String(),
-				},
-			}
-		}
-
-		res[i] = inst
+		res[i] = instanceLinodeToGarm(&instance)
 	}
 
 	return res, nil
