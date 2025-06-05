@@ -4,6 +4,7 @@ package client
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/cloudbase/garm-provider-common/cloudconfig"
+	"github.com/cloudbase/garm-provider-common/params"
+	"github.com/cloudbase/garm-provider-common/util"
 	"github.com/linode/linodego"
 
 	"github.com/flatcar/garm-provider-linode/config"
@@ -45,6 +49,46 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 		config: cfg,
 	}, nil
 }
+
+func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams params.BootstrapInstance) (*linodego.Instance, error) {
+	tools, err := util.GetTools(bootstrapParams.OSType, bootstrapParams.OSArch, bootstrapParams.Tools)
+	if err != nil {
+		return nil, fmt.Errorf("getting tools: %w", err)
+	}
+
+	userData, err := cloudconfig.GetCloudConfig(bootstrapParams, tools, bootstrapParams.Name)
+	if err != nil {
+		return nil, fmt.Errorf("generating userdata: %w", err)
+	}
+
+	password, err := createRandomRootPassword()
+	if err != nil {
+		return nil, fmt.Errorf("generating root password: %w", err)
+	}
+
+	booted := true
+
+	opts := linodego.InstanceCreateOptions{
+		Booted: &booted,
+		Image:  bootstrapParams.Image,
+		Label:  bootstrapParams.Name,
+		Metadata: &linodego.InstanceMetadataOptions{
+			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
+		},
+		Region:   c.config.Region,
+		RootPass: password,
+		Tags: []string{
+			fmt.Sprintf("pool=%s", bootstrapParams.PoolID),
+		},
+		Type: bootstrapParams.Flavor,
+	}
+
+	instance, err := c.Client.CreateInstance(ctx, opts)
+	if err != nil {
+		return nil, fmt.Errorf("creating instance: %w", err)
+	}
+
+	return instance, nil
 }
 
 func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {

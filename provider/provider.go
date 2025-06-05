@@ -44,7 +44,14 @@ func New(configPath, controllerID string) (execution.ExternalProvider, error) {
 
 // CreateInstance creates a new compute instance in the provider.
 func (p *linodeProvider) CreateInstance(ctx context.Context, bootstrapParams params.BootstrapInstance) (params.ProviderInstance, error) {
-	return params.ProviderInstance{}, nil
+	instance, err := p.cli.CreateInstance(ctx, bootstrapParams)
+	if err != nil {
+		return params.ProviderInstance{}, fmt.Errorf("creating the instance: %w", err)
+	}
+
+	inst := instanceLinodeToGarm(instance)
+
+	return inst, nil
 }
 
 // Delete instance will delete the instance in a provider.
