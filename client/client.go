@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -86,6 +87,18 @@ func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams param
 	instance, err := c.Client.CreateInstance(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating instance: %w", err)
+	}
+
+	// We wait for the instance to be provisioned, booted and running.
+	if err := waitUntilReady(5*time.Minute, 5*time.Second, func() (bool, error) {
+		instance, err = c.Client.GetInstance(ctx, instance.ID)
+		if err != nil {
+			return false, fmt.Errorf("getting instance: %w", err)
+		}
+
+		return instance.Status == linodego.InstanceRunning, nil
+	}); err != nil {
+		return nil, fmt.Errorf("getting instance running: %w", err)
 	}
 
 	return instance, nil

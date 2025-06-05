@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
 )
 
 // createRandomRootPassword for instances.
@@ -19,4 +20,28 @@ func createRandomRootPassword() (string, error) {
 	rootPass := base64.StdEncoding.EncodeToString(rawRootPass)
 
 	return rootPass, nil
+}
+
+// waitUntilReady tests the checkFunction until it succeeds.
+func waitUntilReady(timeout, delay time.Duration, checkFunction func() (bool, error)) error {
+	after := time.After(timeout)
+	for {
+		select {
+		case <-after:
+			return fmt.Errorf("time limit exceeded")
+		default:
+		}
+
+		done, err := checkFunction()
+		if err != nil {
+			return err
+		}
+
+		if done {
+			break
+		}
+
+		time.Sleep(delay)
+	}
+	return nil
 }
