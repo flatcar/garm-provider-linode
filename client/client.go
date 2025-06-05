@@ -41,7 +41,7 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 	return &LinodeClient{Client: &client}, nil
 }
 
-func (c *LinodeClient) ListInstances(poolID string) ([]linodego.Instance, error) {
+func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {
 	f := map[string]string{
 		"tags": fmt.Sprintf("pool=%s", poolID),
 	}
@@ -50,7 +50,7 @@ func (c *LinodeClient) ListInstances(poolID string) ([]linodego.Instance, error)
 		return nil, fmt.Errorf("marshalling filter: %w", err)
 	}
 
-	instances, err := c.Client.ListInstances(context.Background(), &linodego.ListOptions{
+	instances, err := c.Client.ListInstances(ctx, &linodego.ListOptions{
 		Filter: string(filter),
 	})
 	if err != nil {

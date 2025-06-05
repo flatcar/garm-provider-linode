@@ -75,7 +75,7 @@ func (p *linodeProvider) GetInstance(ctx context.Context, instance string) (para
 
 // ListInstances will list all instances for a provider.
 func (p *linodeProvider) ListInstances(ctx context.Context, poolID string) ([]params.ProviderInstance, error) {
-	instances, err := p.cli.ListInstances(poolID)
+	instances, err := p.cli.ListInstances(ctx, poolID)
 	if err != nil {
 		return nil, fmt.Errorf("listing instances: %w", err)
 	}
