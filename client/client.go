@@ -43,6 +43,7 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 }
 
 func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
+	// TODO: Consider case where ID is the label (i.e name) of the instance.
 	i, err := strconv.Atoi(ID)
 	if err != nil {
 		return fmt.Errorf("converting ID string to ID int: %w", err)
@@ -56,6 +57,7 @@ func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
 }
 
 func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
+	// TODO: Consider case where ID is the label (i.e name) of the instance.
 	i, err := strconv.Atoi(ID)
 	if err != nil {
 		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
