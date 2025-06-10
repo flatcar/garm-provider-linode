@@ -97,7 +97,7 @@ func TestCreateInstance(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -106,7 +106,7 @@ func TestCreateInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.CreateInstance(t.Context(), params.BootstrapInstance{
+		i, err := cli.CreateInstance(t.Context(), params.BootstrapInstance{
 			Name:          "test-instance",
 			InstanceToken: "test-token",
 			OSArch:        params.Amd64,
@@ -157,7 +157,7 @@ func TestDeleteInstance(t *testing.T) {
 			calls: []call{},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -166,7 +166,7 @@ func TestDeleteInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		err = client.DeleteInstance(t.Context(), "9876")
+		err = cli.DeleteInstance(t.Context(), "9876")
 		require.NoError(t, err)
 
 		require.Len(t, m.calls, 1)
@@ -186,7 +186,7 @@ func TestDeleteInstance(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -195,7 +195,7 @@ func TestDeleteInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		err = client.DeleteInstance(t.Context(), "9876")
+		err = cli.DeleteInstance(t.Context(), "9876")
 		assert.ErrorContains(t, err, "deleting instance from Linode API: random error from the API")
 
 		require.Len(t, m.calls, 1)
@@ -212,7 +212,7 @@ func TestDeleteInstance(t *testing.T) {
 			calls: []call{},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -221,7 +221,7 @@ func TestDeleteInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		err = client.DeleteInstance(t.Context(), "foo")
+		err = cli.DeleteInstance(t.Context(), "foo")
 		assert.ErrorContains(t, err, "converting ID string to ID int: strconv.Atoi: parsing \"foo\": invalid syntax")
 
 		require.Len(t, m.calls, 0)
@@ -239,7 +239,7 @@ func TestGetInstance(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -248,7 +248,7 @@ func TestGetInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.GetInstance(t.Context(), "9876")
+		i, err := cli.GetInstance(t.Context(), "9876")
 		require.NoError(t, err)
 		assert.Equal(t, i.ID, 1234)
 
@@ -269,7 +269,7 @@ func TestGetInstance(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -278,7 +278,7 @@ func TestGetInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.GetInstance(t.Context(), "9876")
+		i, err := cli.GetInstance(t.Context(), "9876")
 		require.Nil(t, i)
 		assert.ErrorContains(t, err, "getting instance from Linode API: random error from the API")
 
@@ -299,7 +299,7 @@ func TestGetInstance(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -308,7 +308,7 @@ func TestGetInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.GetInstance(t.Context(), "foo")
+		i, err := cli.GetInstance(t.Context(), "foo")
 		require.Nil(t, i)
 		assert.ErrorContains(t, err, "converting ID string to ID int: strconv.Atoi: parsing \"foo\": invalid syntax")
 
@@ -332,7 +332,7 @@ func TestListInstances(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -341,7 +341,7 @@ func TestListInstances(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.ListInstances(t.Context(), "1234")
+		i, err := cli.ListInstances(t.Context(), "1234")
 		require.NoError(t, err)
 		assert.Equal(t, len(i), 2)
 
@@ -362,7 +362,7 @@ func TestListInstances(t *testing.T) {
 			},
 		}
 
-		client, err := client.New(
+		cli, err := client.New(
 			&config.Config{
 				Token: "foo",
 			},
@@ -371,7 +371,7 @@ func TestListInstances(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := client.ListInstances(t.Context(), "1234")
+		i, err := cli.ListInstances(t.Context(), "1234")
 		require.Nil(t, i)
 		assert.ErrorContains(t, err, "getting instances list from Linode API: random error from the API")
 
