@@ -22,7 +22,7 @@ import (
 )
 
 type LinodeClient struct {
-	Client *linodego.Client
+	client *linodego.Client
 	config *config.Config
 }
 
@@ -46,7 +46,7 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 	client := linodego.NewClient(oauth2Client)
 
 	return &LinodeClient{
-		Client: &client,
+		client: &client,
 		config: cfg,
 	}, nil
 }
@@ -91,14 +91,14 @@ func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams param
 		Type: bootstrapParams.Flavor,
 	}
 
-	instance, err := c.Client.CreateInstance(ctx, opts)
+	instance, err := c.client.CreateInstance(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating instance: %w", err)
 	}
 
 	// We wait for the instance to be provisioned, booted and running.
 	if err := waitUntilReady(5*time.Minute, 5*time.Second, func() (bool, error) {
-		instance, err = c.Client.GetInstance(ctx, instance.ID)
+		instance, err = c.client.GetInstance(ctx, instance.ID)
 		if err != nil {
 			return false, fmt.Errorf("getting instance: %w", err)
 		}
@@ -118,7 +118,7 @@ func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
 		return fmt.Errorf("converting ID string to ID int: %w", err)
 	}
 
-	if err := c.Client.DeleteInstance(ctx, i); err != nil {
+	if err := c.client.DeleteInstance(ctx, i); err != nil {
 		return fmt.Errorf("deleting instance from Linode API: %w", err)
 	}
 
@@ -132,7 +132,7 @@ func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.In
 		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
 	}
 
-	instance, err := c.Client.GetInstance(ctx, i)
+	instance, err := c.client.GetInstance(ctx, i)
 	if err != nil {
 		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
 	}
@@ -149,7 +149,7 @@ func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]lino
 		return nil, fmt.Errorf("marshalling filter: %w", err)
 	}
 
-	instances, err := c.Client.ListInstances(ctx, &linodego.ListOptions{
+	instances, err := c.client.ListInstances(ctx, &linodego.ListOptions{
 		Filter: string(filter),
 	})
 	if err != nil {
