@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/flatcar/garm-provider-linode/client"
+	"github.com/flatcar/garm-provider-linode/client/api"
 	"github.com/flatcar/garm-provider-linode/config"
 
 	execution "github.com/cloudbase/garm-provider-common/execution/v0.1.0"
@@ -30,7 +31,12 @@ func New(configPath, controllerID string) (execution.ExternalProvider, error) {
 		return nil, fmt.Errorf("loading config: %w", err)
 	}
 
-	cli, err := client.New(conf, controllerID)
+	a, err := api.New(conf)
+	if err != nil {
+		return nil, fmt.Errorf("creating API client: %w", err)
+	}
+
+	cli, err := client.New(conf, a, controllerID)
 	if err != nil {
 		return nil, fmt.Errorf("getting client: %w", err)
 	}

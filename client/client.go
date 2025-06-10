@@ -7,46 +7,27 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
-
-	"golang.org/x/oauth2"
 
 	"github.com/cloudbase/garm-provider-common/cloudconfig"
 	"github.com/cloudbase/garm-provider-common/params"
 	"github.com/cloudbase/garm-provider-common/util"
 	"github.com/linode/linodego"
 
+	"github.com/flatcar/garm-provider-linode/client/api"
 	"github.com/flatcar/garm-provider-linode/config"
 )
 
 type Linode struct {
-	client *linodego.Client
+	api    api.LinodeAPI
 	config *config.Config
 }
 
 // New returns a new Linode client.
-func New(cfg *config.Config, controllerID string) (*Linode, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("configuration is nil")
-	}
-
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("validating configuration: %w", err)
-	}
-
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cfg.Token})
-	oauth2Linode := &http.Client{
-		Transport: &oauth2.Transport{
-			Source: tokenSource,
-		},
-	}
-
-	client := linodego.NewClient(oauth2Linode)
-
+func New(cfg *config.Config, a api.LinodeAPI, controllerID string) (*Linode, error) {
 	return &Linode{
-		client: &client,
+		api:    a,
 		config: cfg,
 	}, nil
 }
@@ -91,14 +72,14 @@ func (c *Linode) CreateInstance(ctx context.Context, bootstrapParams params.Boot
 		Type: bootstrapParams.Flavor,
 	}
 
-	instance, err := c.client.CreateInstance(ctx, opts)
+	instance, err := c.api.CreateInstance(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating instance: %w", err)
 	}
 
 	// We wait for the instance to be provisioned, booted and running.
 	if err := waitUntilReady(5*time.Minute, 5*time.Second, func() (bool, error) {
-		instance, err = c.client.GetInstance(ctx, instance.ID)
+		instance, err = c.api.GetInstance(ctx, instance.ID)
 		if err != nil {
 			return false, fmt.Errorf("getting instance: %w", err)
 		}
@@ -118,7 +99,7 @@ func (c *Linode) DeleteInstance(ctx context.Context, ID string) error {
 		return fmt.Errorf("converting ID string to ID int: %w", err)
 	}
 
-	if err := c.client.DeleteInstance(ctx, i); err != nil {
+	if err := c.api.DeleteInstance(ctx, i); err != nil {
 		return fmt.Errorf("deleting instance from Linode API: %w", err)
 	}
 
@@ -132,7 +113,7 @@ func (c *Linode) GetInstance(ctx context.Context, ID string) (*linodego.Instance
 		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
 	}
 
-	instance, err := c.client.GetInstance(ctx, i)
+	instance, err := c.api.GetInstance(ctx, i)
 	if err != nil {
 		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
 	}
@@ -149,7 +130,7 @@ func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.I
 		return nil, fmt.Errorf("marshalling filter: %w", err)
 	}
 
-	instances, err := c.client.ListInstances(ctx, &linodego.ListOptions{
+	instances, err := c.api.ListInstances(ctx, &linodego.ListOptions{
 		Filter: string(filter),
 	})
 	if err != nil {
