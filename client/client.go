@@ -95,13 +95,18 @@ func (c *Linode) CreateInstance(ctx context.Context, bootstrapParams params.Boot
 }
 
 func (c *Linode) DeleteInstance(ctx context.Context, ID string) error {
-	// TODO: Consider case where ID is the label (i.e name) of the instance.
-	i, err := strconv.Atoi(ID)
+	var id int
+	id, err := strconv.Atoi(ID)
 	if err != nil {
-		return fmt.Errorf("converting ID string to ID int: %w", err)
+		i, err := c.GetInstanceID(ctx, ID)
+		if err != nil {
+			return fmt.Errorf("getting instance ID by its name: %w", err)
+		}
+
+		id = i
 	}
 
-	if err := c.api.DeleteInstance(ctx, i); err != nil {
+	if err := c.api.DeleteInstance(ctx, id); err != nil {
 		return fmt.Errorf("deleting instance from Linode API: %w", err)
 	}
 
@@ -109,18 +114,46 @@ func (c *Linode) DeleteInstance(ctx context.Context, ID string) error {
 }
 
 func (c *Linode) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
-	// TODO: Consider case where ID is the label (i.e name) of the instance.
-	i, err := strconv.Atoi(ID)
+	var id int
+	id, err := strconv.Atoi(ID)
 	if err != nil {
-		return nil, fmt.Errorf("converting ID string to ID int: %w", err)
+		i, err := c.GetInstanceID(ctx, ID)
+		if err != nil {
+			return nil, fmt.Errorf("getting instance ID by its name: %w", err)
+		}
+
+		id = i
 	}
 
-	instance, err := c.api.GetInstance(ctx, i)
+	instance, err := c.api.GetInstance(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting instance from Linode API: %w", err)
 	}
 
 	return instance, nil
+}
+
+func (c *Linode) GetInstanceID(ctx context.Context, name string) (int, error) {
+	f := map[string]string{
+		"label": name,
+	}
+	filter, err := json.Marshal(f)
+	if err != nil {
+		return -1, fmt.Errorf("marshalling filter: %w", err)
+	}
+
+	instances, err := c.api.ListInstances(ctx, &linodego.ListOptions{
+		Filter: string(filter),
+	})
+	if err != nil {
+		return -1, fmt.Errorf("listing instances from the API: %w", err)
+	}
+
+	if len(instances) == 0 {
+		return -1, fmt.Errorf("no instances matching this name: %s", name)
+	}
+
+	return instances[0].ID, nil
 }
 
 func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {

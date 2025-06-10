@@ -178,6 +178,53 @@ func TestDeleteInstance(t *testing.T) {
 		assert.Equal(t, opts, 9876)
 	})
 
+	t.Run("Success from ID not being an ID", func(t *testing.T) {
+		m := &mockLinode{
+			calls: []call{},
+			getInstance: func(ctx context.Context, ID int) (*linodego.Instance, error) {
+				return &linodego.Instance{
+					ID:    9876,
+					Label: "foo",
+				}, nil
+			},
+			listInstances: func(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Instance, error) {
+				return []linodego.Instance{
+					{
+						ID: 9876,
+					},
+				}, nil
+			},
+		}
+
+		cli, err := client.New(
+			&config.Config{
+				Token: "foo",
+			},
+			m,
+			"1234",
+		)
+		require.NoError(t, err)
+
+		err = cli.DeleteInstance(t.Context(), "foo")
+		require.Nil(t, err)
+
+		require.Len(t, m.calls, 2)
+
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"label":"foo"}`)
+
+		c = m.calls[1]
+		assert.Equal(t, c.name, MockDeleteInstance)
+
+		ID, ok := c.args.(int)
+		require.True(t, ok)
+		assert.Equal(t, ID, 9876)
+	})
+
 	t.Run("Fail from API", func(t *testing.T) {
 		m := &mockLinode{
 			calls: []call{},
@@ -207,9 +254,15 @@ func TestDeleteInstance(t *testing.T) {
 		assert.Equal(t, opts, 9876)
 	})
 
-	t.Run("Fail from ID not being an ID", func(t *testing.T) {
+	t.Run("Fail from ID not being an ID and no match on the name", func(t *testing.T) {
 		m := &mockLinode{
 			calls: []call{},
+			getInstance: func(ctx context.Context, ID int) (*linodego.Instance, error) {
+				return &linodego.Instance{
+					ID:    9876,
+					Label: "foo",
+				}, nil
+			},
 		}
 
 		cli, err := client.New(
@@ -222,9 +275,15 @@ func TestDeleteInstance(t *testing.T) {
 		require.NoError(t, err)
 
 		err = cli.DeleteInstance(t.Context(), "foo")
-		assert.ErrorContains(t, err, "converting ID string to ID int: strconv.Atoi: parsing \"foo\": invalid syntax")
+		assert.ErrorContains(t, err, "getting instance ID by its name: no instances matching this name: foo")
 
-		require.Len(t, m.calls, 0)
+		require.Len(t, m.calls, 1)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"label":"foo"}`)
 	})
 }
 
@@ -261,6 +320,52 @@ func TestGetInstance(t *testing.T) {
 		assert.Equal(t, opts, 9876)
 	})
 
+	t.Run("Success from ID not being an ID", func(t *testing.T) {
+		m := &mockLinode{
+			calls: []call{},
+			getInstance: func(ctx context.Context, ID int) (*linodego.Instance, error) {
+				return &linodego.Instance{
+					ID:    9876,
+					Label: "foo",
+				}, nil
+			},
+			listInstances: func(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Instance, error) {
+				return []linodego.Instance{
+					{
+						ID: 9876,
+					},
+				}, nil
+			},
+		}
+
+		cli, err := client.New(
+			&config.Config{
+				Token: "foo",
+			},
+			m,
+			"1234",
+		)
+		require.NoError(t, err)
+
+		_, err = cli.GetInstance(t.Context(), "foo")
+		require.Nil(t, err)
+
+		require.Len(t, m.calls, 2)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"label":"foo"}`)
+
+		c = m.calls[1]
+		assert.Equal(t, c.name, MockGetInstance)
+
+		ID, ok := c.args.(int)
+		require.True(t, ok)
+		assert.Equal(t, ID, 9876)
+	})
+
 	t.Run("Fail from API", func(t *testing.T) {
 		m := &mockLinode{
 			calls: []call{},
@@ -291,11 +396,14 @@ func TestGetInstance(t *testing.T) {
 		assert.Equal(t, opts, 9876)
 	})
 
-	t.Run("Fail from ID not being an ID", func(t *testing.T) {
+	t.Run("Fail from ID not being an ID and no match on the name", func(t *testing.T) {
 		m := &mockLinode{
 			calls: []call{},
 			getInstance: func(ctx context.Context, ID int) (*linodego.Instance, error) {
-				return nil, fmt.Errorf("random error from the API")
+				return &linodego.Instance{
+					ID:    9876,
+					Label: "foo",
+				}, nil
 			},
 		}
 
@@ -308,11 +416,16 @@ func TestGetInstance(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		i, err := cli.GetInstance(t.Context(), "foo")
-		require.Nil(t, i)
-		assert.ErrorContains(t, err, "converting ID string to ID int: strconv.Atoi: parsing \"foo\": invalid syntax")
+		_, err = cli.GetInstance(t.Context(), "foo")
+		assert.ErrorContains(t, err, "getting instance ID by its name: no instances matching this name: foo")
 
-		require.Len(t, m.calls, 0)
+		require.Len(t, m.calls, 1)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"label":"foo"}`)
 	})
 }
 
