@@ -138,7 +138,7 @@ func TestCreateInstance(t *testing.T) {
 		assert.Equal(t, c.name, MockCreateInstance)
 		opts, ok := c.args.(linodego.InstanceCreateOptions)
 		require.True(t, ok)
-		assert.Equal(t, opts.Tags, []string{"pool=test-pool"})
+		assert.Equal(t, opts.Tags, []string{fmt.Sprintf("%s=test-pool", client.TagPool)})
 		require.NotNil(t, opts.Metadata)
 		assert.NotEmpty(t, opts.Metadata.UserData)
 
@@ -351,7 +351,7 @@ func TestListInstances(t *testing.T) {
 
 		opts, ok := c.args.(*linodego.ListOptions)
 		require.True(t, ok)
-		assert.Equal(t, opts.Filter, `{"tags":"pool=1234"}`)
+		assert.Equal(t, opts.Filter, fmt.Sprintf(`{"tags":"%s=1234"}`, client.TagPool))
 	})
 
 	t.Run("Fail from API", func(t *testing.T) {
@@ -381,6 +381,6 @@ func TestListInstances(t *testing.T) {
 
 		opts, ok := c.args.(*linodego.ListOptions)
 		require.True(t, ok)
-		assert.Equal(t, opts.Filter, `{"tags":"pool=1234"}`)
+		assert.Equal(t, opts.Filter, fmt.Sprintf(`{"tags":"%s=1234"}`, client.TagPool))
 	})
 }

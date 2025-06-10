@@ -19,6 +19,8 @@ import (
 	"github.com/flatcar/garm-provider-linode/config"
 )
 
+const TagPool = "garm-pool-id"
+
 type Linode struct {
 	api    api.LinodeAPI
 	config *config.Config
@@ -67,7 +69,7 @@ func (c *Linode) CreateInstance(ctx context.Context, bootstrapParams params.Boot
 		Region:   c.config.Region,
 		RootPass: password,
 		Tags: []string{
-			fmt.Sprintf("pool=%s", bootstrapParams.PoolID),
+			fmt.Sprintf("%s=%s", TagPool, bootstrapParams.PoolID),
 		},
 		Type: bootstrapParams.Flavor,
 	}
@@ -123,7 +125,7 @@ func (c *Linode) GetInstance(ctx context.Context, ID string) (*linodego.Instance
 
 func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {
 	f := map[string]string{
-		"tags": fmt.Sprintf("pool=%s", poolID),
+		"tags": fmt.Sprintf("%s=%s", TagPool, poolID),
 	}
 	filter, err := json.Marshal(f)
 	if err != nil {
