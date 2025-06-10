@@ -21,13 +21,13 @@ import (
 	"github.com/flatcar/garm-provider-linode/config"
 )
 
-type LinodeClient struct {
+type Linode struct {
 	client *linodego.Client
 	config *config.Config
 }
 
 // New returns a new Linode client.
-func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
+func New(cfg *config.Config, controllerID string) (*Linode, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("configuration is nil")
 	}
@@ -37,21 +37,21 @@ func New(cfg *config.Config, controllerID string) (*LinodeClient, error) {
 	}
 
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cfg.Token})
-	oauth2Client := &http.Client{
+	oauth2Linode := &http.Client{
 		Transport: &oauth2.Transport{
 			Source: tokenSource,
 		},
 	}
 
-	client := linodego.NewClient(oauth2Client)
+	client := linodego.NewClient(oauth2Linode)
 
-	return &LinodeClient{
+	return &Linode{
 		client: &client,
 		config: cfg,
 	}, nil
 }
 
-func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams params.BootstrapInstance) (*linodego.Instance, error) {
+func (c *Linode) CreateInstance(ctx context.Context, bootstrapParams params.BootstrapInstance) (*linodego.Instance, error) {
 	tools, err := util.GetTools(bootstrapParams.OSType, bootstrapParams.OSArch, bootstrapParams.Tools)
 	if err != nil {
 		return nil, fmt.Errorf("getting tools: %w", err)
@@ -111,7 +111,7 @@ func (c *LinodeClient) CreateInstance(ctx context.Context, bootstrapParams param
 	return instance, nil
 }
 
-func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
+func (c *Linode) DeleteInstance(ctx context.Context, ID string) error {
 	// TODO: Consider case where ID is the label (i.e name) of the instance.
 	i, err := strconv.Atoi(ID)
 	if err != nil {
@@ -125,7 +125,7 @@ func (c *LinodeClient) DeleteInstance(ctx context.Context, ID string) error {
 	return nil
 }
 
-func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
+func (c *Linode) GetInstance(ctx context.Context, ID string) (*linodego.Instance, error) {
 	// TODO: Consider case where ID is the label (i.e name) of the instance.
 	i, err := strconv.Atoi(ID)
 	if err != nil {
@@ -140,7 +140,7 @@ func (c *LinodeClient) GetInstance(ctx context.Context, ID string) (*linodego.In
 	return instance, nil
 }
 
-func (c *LinodeClient) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {
+func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.Instance, error) {
 	f := map[string]string{
 		"tags": fmt.Sprintf("pool=%s", poolID),
 	}

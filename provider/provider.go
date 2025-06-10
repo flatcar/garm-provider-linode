@@ -20,7 +20,7 @@ var (
 
 type linodeProvider struct {
 	cfg          *config.Config
-	cli          *client.LinodeClient
+	cli          *client.Linode
 	controllerID string
 }
 
