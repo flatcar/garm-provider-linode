@@ -180,3 +180,29 @@ func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.I
 
 	return instances, nil
 }
+
+func (c *Linode) RemoveAllInstances(ctx context.Context) error {
+	f := map[string]string{
+		"tags": fmt.Sprintf("%s=%s", TagController, c.id),
+	}
+	filter, err := json.Marshal(f)
+	if err != nil {
+		return fmt.Errorf("marshalling filter: %w", err)
+	}
+
+	instances, err := c.api.ListInstances(ctx, &linodego.ListOptions{
+		Filter: string(filter),
+	})
+	if err != nil {
+		return fmt.Errorf("getting instances list from Linode API: %w", err)
+	}
+
+	for _, instance := range instances {
+		id := strconv.Itoa(instance.ID)
+		if err := c.DeleteInstance(ctx, id); err != nil {
+			return fmt.Errorf("deleting instance %s: %w", id, err)
+		}
+	}
+
+	return nil
+}
