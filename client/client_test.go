@@ -138,7 +138,10 @@ func TestCreateInstance(t *testing.T) {
 		assert.Equal(t, c.name, MockCreateInstance)
 		opts, ok := c.args.(linodego.InstanceCreateOptions)
 		require.True(t, ok)
-		assert.Equal(t, opts.Tags, []string{fmt.Sprintf("%s=test-pool", client.TagPool)})
+		assert.Equal(t, opts.Tags, []string{
+			fmt.Sprintf("%s=test-pool", client.TagPool),
+			fmt.Sprintf("%s=1234", client.TagController),
+		})
 		require.NotNil(t, opts.Metadata)
 		assert.NotEmpty(t, opts.Metadata.UserData)
 
