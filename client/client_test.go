@@ -138,7 +138,10 @@ func TestCreateInstance(t *testing.T) {
 		assert.Equal(t, c.name, MockCreateInstance)
 		opts, ok := c.args.(linodego.InstanceCreateOptions)
 		require.True(t, ok)
-		assert.Equal(t, opts.Tags, []string{fmt.Sprintf("%s=test-pool", client.TagPool)})
+		assert.Equal(t, opts.Tags, []string{
+			fmt.Sprintf("%s=test-pool", client.TagPool),
+			fmt.Sprintf("%s=1234", client.TagController),
+		})
 		require.NotNil(t, opts.Metadata)
 		assert.NotEmpty(t, opts.Metadata.UserData)
 
@@ -495,5 +498,125 @@ func TestListInstances(t *testing.T) {
 		opts, ok := c.args.(*linodego.ListOptions)
 		require.True(t, ok)
 		assert.Equal(t, opts.Filter, fmt.Sprintf(`{"tags":"%s=1234"}`, client.TagPool))
+	})
+}
+
+func TestRemoveAllInstances(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		m := &mockLinode{
+			calls: []call{},
+			listInstances: func(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Instance, error) {
+				return []linodego.Instance{
+					{
+						ID: 1111,
+					},
+					{
+						ID: 2222,
+					},
+				}, nil
+			},
+		}
+
+		cli, err := client.New(
+			&config.Config{
+				Token: "foo",
+			},
+			m,
+			"1234",
+		)
+		require.NoError(t, err)
+
+		err = cli.RemoveAllInstances(t.Context())
+		require.NoError(t, err)
+
+		require.Len(t, m.calls, 3)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"tags":"garm-controller-id=1234"}`)
+
+		c = m.calls[1]
+		assert.Equal(t, c.name, MockDeleteInstance)
+
+		id, ok := c.args.(int)
+		require.True(t, ok)
+		assert.Equal(t, id, 1111)
+
+		c = m.calls[2]
+		assert.Equal(t, c.name, MockDeleteInstance)
+
+		id, ok = c.args.(int)
+		require.True(t, ok)
+		assert.Equal(t, id, 2222)
+	})
+
+	t.Run("Fail to list instances", func(t *testing.T) {
+		m := &mockLinode{
+			calls: []call{},
+			listInstances: func(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Instance, error) {
+				return nil, fmt.Errorf("random error from the API")
+			},
+		}
+
+		cli, err := client.New(
+			&config.Config{
+				Token: "foo",
+			},
+			m,
+			"1234",
+		)
+		require.NoError(t, err)
+
+		err = cli.RemoveAllInstances(t.Context())
+		assert.ErrorContains(t, err, "getting instances list from Linode API: random error from the API")
+
+		require.Len(t, m.calls, 1)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+	})
+
+	t.Run("Fail to delete one instance", func(t *testing.T) {
+		m := &mockLinode{
+			calls: []call{},
+			deleteInstance: func(ctx context.Context, ID int) error {
+				return fmt.Errorf("random error from the API")
+			},
+			listInstances: func(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Instance, error) {
+				return []linodego.Instance{
+					{
+						ID: 1111,
+					},
+				}, nil
+			},
+		}
+
+		cli, err := client.New(
+			&config.Config{
+				Token: "foo",
+			},
+			m,
+			"1234",
+		)
+		require.NoError(t, err)
+
+		err = cli.RemoveAllInstances(t.Context())
+		assert.ErrorContains(t, err, "deleting instance 1111: deleting instance from Linode API: random error from the API")
+
+		require.Len(t, m.calls, 2)
+		c := m.calls[0]
+		assert.Equal(t, c.name, MockListInstances)
+
+		opts, ok := c.args.(*linodego.ListOptions)
+		require.True(t, ok)
+		assert.Equal(t, opts.Filter, `{"tags":"garm-controller-id=1234"}`)
+
+		c = m.calls[1]
+		assert.Equal(t, c.name, MockDeleteInstance)
+
+		id, ok := c.args.(int)
+		require.True(t, ok)
+		assert.Equal(t, id, 1111)
 	})
 }

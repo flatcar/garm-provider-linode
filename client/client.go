@@ -19,11 +19,15 @@ import (
 	"github.com/flatcar/garm-provider-linode/config"
 )
 
-const TagPool = "garm-pool-id"
+const (
+	TagPool       = "garm-pool-id"
+	TagController = "garm-controller-id"
+)
 
 type Linode struct {
 	api    api.LinodeAPI
 	config *config.Config
+	id     string
 }
 
 // New returns a new Linode client.
@@ -31,6 +35,7 @@ func New(cfg *config.Config, a api.LinodeAPI, controllerID string) (*Linode, err
 	return &Linode{
 		api:    a,
 		config: cfg,
+		id:     controllerID,
 	}, nil
 }
 
@@ -70,6 +75,7 @@ func (c *Linode) CreateInstance(ctx context.Context, bootstrapParams params.Boot
 		RootPass: password,
 		Tags: []string{
 			fmt.Sprintf("%s=%s", TagPool, bootstrapParams.PoolID),
+			fmt.Sprintf("%s=%s", TagController, c.id),
 		},
 		Type: bootstrapParams.Flavor,
 	}
@@ -173,4 +179,30 @@ func (c *Linode) ListInstances(ctx context.Context, poolID string) ([]linodego.I
 	}
 
 	return instances, nil
+}
+
+func (c *Linode) RemoveAllInstances(ctx context.Context) error {
+	f := map[string]string{
+		"tags": fmt.Sprintf("%s=%s", TagController, c.id),
+	}
+	filter, err := json.Marshal(f)
+	if err != nil {
+		return fmt.Errorf("marshalling filter: %w", err)
+	}
+
+	instances, err := c.api.ListInstances(ctx, &linodego.ListOptions{
+		Filter: string(filter),
+	})
+	if err != nil {
+		return fmt.Errorf("getting instances list from Linode API: %w", err)
+	}
+
+	for _, instance := range instances {
+		id := strconv.Itoa(instance.ID)
+		if err := c.DeleteInstance(ctx, id); err != nil {
+			return fmt.Errorf("deleting instance %s: %w", id, err)
+		}
+	}
+
+	return nil
 }
