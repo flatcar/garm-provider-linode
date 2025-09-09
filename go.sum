@@ -19,8 +19,8 @@ github.com/gorilla/handlers v1.5.2 h1:cLTUSsNkgcwhgRqvCNmdbRWG0A3N4F+M2nWKdScwyE
 github.com/gorilla/handlers v1.5.2/go.mod h1:dX+xVpaxdSw+q0Qek8SSsl3dfMk3jNddUkMzo0GtH0w=
 github.com/jarcoal/httpmock v1.4.1 h1:0Ju+VCFuARfFlhVXFc2HxlcQkfB+Xq12/EotHko+x2A=
 github.com/jarcoal/httpmock v1.4.1/go.mod h1:ftW1xULwo+j0R0JJkJIIi7UKigZUXCLLanykgjwBXL0=
-github.com/linode/linodego v1.56.0 h1:WO2ztR6/hdfqCIeZnC8DyYb+AXnuWOl4FB/qqK6T5HE=
-github.com/linode/linodego v1.56.0/go.mod h1:W5+QH6nCppgi5gud/b16uAKOzTtfuwzjOHEFA7bKOd0=
+github.com/linode/linodego v1.57.0 h1:B5cl2gRNtaY1TIQ7B4uAhDa8NjtiWdEnWUO8nkHaU0A=
+github.com/linode/linodego v1.57.0/go.mod h1:7zol1dqpLRdAT9s04mIaUhA+rXaRERFnKBERcQZiEeg=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/minio/sio v0.4.1 h1:EMe3YBC1nf+sRQia65Rutxi+Z554XPV0dt8BIBA+a/0=
