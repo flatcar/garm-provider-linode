@@ -7,7 +7,7 @@ require (
 	github.com/cloudbase/garm-provider-common v0.1.7
 	github.com/linode/linodego v1.66.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/oauth2 v0.35.0
+	golang.org/x/oauth2 v0.36.0
 )
 
 require (
