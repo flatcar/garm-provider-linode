@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/cloudbase/garm-provider-common v0.1.7
+	github.com/cloudbase/garm-provider-common v0.1.8
 	github.com/linode/linodego v1.68.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.36.0
