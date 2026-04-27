@@ -2,8 +2,8 @@
 ## explicit; go 1.18
 github.com/BurntSushi/toml
 github.com/BurntSushi/toml/internal
-# github.com/cloudbase/garm-provider-common v0.1.7
-## explicit; go 1.23.0
+# github.com/cloudbase/garm-provider-common v0.1.9
+## explicit; go 1.25.0
 github.com/cloudbase/garm-provider-common/cloudconfig
 github.com/cloudbase/garm-provider-common/defaults
 github.com/cloudbase/garm-provider-common/errors
@@ -40,8 +40,8 @@ github.com/linode/linodego/internal/parseabletime
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
-# github.com/minio/sio v0.4.1
-## explicit; go 1.18
+# github.com/minio/sio v0.4.3
+## explicit; go 1.24.0
 github.com/minio/sio
 # github.com/pkg/errors v0.9.1
 ## explicit
