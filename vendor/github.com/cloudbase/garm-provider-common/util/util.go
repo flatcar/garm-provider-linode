@@ -18,8 +18,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/rand"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"math/big"
@@ -201,22 +203,22 @@ func GetTools(osType params.OSType, osArch params.OSArch, tools []params.RunnerA
 		return params.RunnerApplicationDownload{}, fmt.Errorf("unsupported OS arch: %s", osArch)
 	}
 
+	ghArch, err := ResolveToGithubArch(string(osArch))
+	if err != nil {
+		return params.RunnerApplicationDownload{}, fmt.Errorf("failed to convert osArch: %w", err)
+	}
+	ghOS, err := ResolveToGithubOSType(string(osType))
+	if err != nil {
+		return params.RunnerApplicationDownload{}, fmt.Errorf("failed to convert osType: %w", err)
+	}
+
 	// Find tools for OS/Arch.
 	for _, tool := range tools {
 		if tool.GetOS() == "" || tool.GetArchitecture() == "" {
 			continue
 		}
 
-		ghArch, err := ResolveToGithubArch(string(osArch))
-		if err != nil {
-			continue
-		}
-
-		ghOS, err := ResolveToGithubOSType(string(osType))
-		if err != nil {
-			continue
-		}
-		if tool.GetArchitecture() == ghArch && tool.GetOS() == ghOS {
+		if (tool.GetArchitecture() == ghArch || tool.GetArchitecture() == string(osArch)) && (tool.GetOS() == ghOS || tool.GetOS() == string(osType)) {
 			return tool, nil
 		}
 	}
@@ -324,4 +326,34 @@ func CompressData(data []byte) ([]byte, error) {
 	}
 
 	return b.Bytes(), nil
+}
+
+// SanitizeCABundle parses a PEM bundle, validates that each block is a
+// valid certificate, and returns a new bundle with duplicates removed,
+// preserving the original order.
+func SanitizeCABundle(bundle []byte) ([]byte, error) {
+	seen := map[string]struct{}{}
+	var buf bytes.Buffer
+
+	rest := bundle
+	for {
+		var block *pem.Block
+		block, rest = pem.Decode(rest)
+		if block == nil {
+			break
+		}
+		if _, err := x509.ParseCertificates(block.Bytes); err != nil {
+			return nil, fmt.Errorf("invalid certificate in PEM bundle: %w", err)
+		}
+		key := string(block.Bytes)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		if err := pem.Encode(&buf, block); err != nil {
+			return nil, fmt.Errorf("failed to encode PEM block: %w", err)
+		}
+		seen[key] = struct{}{}
+	}
+
+	return buf.Bytes(), nil
 }
