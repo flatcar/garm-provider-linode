@@ -32,7 +32,7 @@ github.com/google/uuid
 # github.com/gorilla/handlers v1.5.2
 ## explicit; go 1.20
 github.com/gorilla/handlers
-# github.com/linode/linodego v1.68.0
+# github.com/linode/linodego v1.69.0
 ## explicit; go 1.25.0
 github.com/linode/linodego
 github.com/linode/linodego/internal/duration
@@ -95,7 +95,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# gopkg.in/ini.v1 v1.67.1
+# gopkg.in/ini.v1 v1.67.2
 ## explicit; go 1.13
 gopkg.in/ini.v1
 # gopkg.in/natefinch/lumberjack.v2 v2.2.1
